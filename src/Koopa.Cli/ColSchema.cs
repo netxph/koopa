@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace Koopa.Cli
 {
-    public class Schema : IEnumerable<Column>
+    public class ColSchema : IEnumerable<Column>
     {
         private readonly List<Column> _columns;
 
-        public Schema()
+        public ColSchema()
         {
             _columns = new List<Column>();
         }

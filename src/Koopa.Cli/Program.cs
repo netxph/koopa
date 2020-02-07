@@ -29,6 +29,26 @@ namespace Koopa.Cli
                 });
             });
 
+            app.Command("export", exportCmd =>
+            {
+                var connection = exportCmd.Option("-c|--connection <connection_string>", "The connection string.",
+                    CommandOptionType.SingleValue);
+                var table = exportCmd.Option("-t|--table <table_name>", "The table.", CommandOptionType.SingleValue);
+                var destination = exportCmd.Option("-d|--destination <destination>", "The target destination.", CommandOptionType.SingleValue);
+
+                exportCmd.OnExecute(() =>
+                {
+                    var exportView = new ExportView(
+                        new TableMigrator(table.Value(),
+                            new SqlConnector(connection.Value())));
+
+                    exportView.Table = table.Value();
+                    exportView.Destination = destination.Value();
+
+                    exportView.Show();
+                });
+            });
+
             app.OnExecute(() =>
             {
                 Console.WriteLine("ERROR: Please specify a command.");

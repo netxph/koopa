@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Koopa.Cli
 {
-    public class SqlConnector : IConnector, IDisposable
+    public class SqlConnector : IConnector
     {
         private readonly IDbConnection _connection;
 
@@ -16,7 +16,7 @@ namespace Koopa.Cli
             _connection.Open();
         }
 
-        public Schema ReadSchema(string table)
+        public ColSchema ReadSchema(string table)
         {
             var split= table.Split(".");
             var tb = split[1];
@@ -25,18 +25,29 @@ namespace Koopa.Cli
             var command = _connection.CreateCommand();
             command.CommandText = $"SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{sch}' AND TABLE_NAME = '{tb}'";
             command.CommandType = CommandType.Text;
-            var reader = command.ExecuteReader();
 
-            var schema = new Schema();
+            var schema = new ColSchema();
 
-            while (reader.Read())
+            using (var reader = command.ExecuteReader())
             {
-                var col = reader.GetString(reader.GetOrdinal("COLUMN_NAME"));
-                var colType = reader.GetString(reader.GetOrdinal("DATA_TYPE"));
-                schema.AddColumn(col, colType);
+                while (reader.Read())
+                {
+                    var col = reader.GetString(reader.GetOrdinal("COLUMN_NAME"));
+                    var colType = reader.GetString(reader.GetOrdinal("DATA_TYPE"));
+                    schema.AddColumn(col, colType);
+                }
             }
 
             return schema;
+        }
+
+        public IDataReader Read(string table)
+        {
+            var command = _connection.CreateCommand();
+            command.CommandText = $"SELECT * FROM {table}";
+            command.CommandType = CommandType.Text;
+
+            return command.ExecuteReader();
         }
 
         public void Dispose()

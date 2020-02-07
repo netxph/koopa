@@ -2,6 +2,7 @@
 {
     public interface IMigrator
     {
-        Schema GetSchema();
+        ColSchema GetSchema();
+        void Migrate(string destination);
     }
 }

@@ -1,7 +1,11 @@
-﻿namespace Koopa.Cli
+﻿using System;
+using System.Data;
+
+namespace Koopa.Cli
 {
-    public interface IConnector
+    public interface IConnector : IDisposable
     {
-        Schema ReadSchema(string table);
+        ColSchema ReadSchema(string table);
+        IDataReader Read(string table);
     }
 }
