@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.SqlClient;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace Koopa.Cli
@@ -19,9 +20,10 @@ namespace Koopa.Cli
 
                 schemaCmd.OnExecute(() =>
                 {
-                    var schemaView = new SchemaView();
+                    var schemaView = new SchemaView(
+                        new TableMigrator(table.Value(),
+                            new SqlConnection(connection.Value())));
 
-                    schemaView.Connection = connection.Value();
                     schemaView.Table = table.Value();
 
                     schemaView.Show();

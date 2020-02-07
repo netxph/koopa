@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Koopa.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "schema -c \"Data Source=localhost;Initial Catalog=NcsAnalyticsDW114;Integrated Security=true;\" -t \"AnalyticsDW.Treatment\""
+    }
+  }
+}
