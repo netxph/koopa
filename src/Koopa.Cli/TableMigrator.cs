@@ -1,10 +1,6 @@
-﻿using System.Data;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.IO;
-using System.Linq;
-using System.Net;
 using Parquet;
 using Parquet.Data;
 using Parquet.Data.Rows;
@@ -70,7 +66,7 @@ namespace Koopa.Cli
 
             foreach (var col in schema)
             {
-                fields.Add(new DataField<string>(col.Name));
+                fields.Add(new TypeMapper(col));
             }
 
             int page = 1;
@@ -83,10 +79,7 @@ namespace Koopa.Cli
                     var table = new Table(
                             new Schema(fields.ToArray()));
 
-                    using (var reader =
-                            _connector.Read(
-                                $"SELECT * FROM {Table} ORDER BY {Key} OFFSET {PageSize * (page -1)} ROWS FETCH NEXT {PageSize} ROWS ONLY OPTION (RECOMPILE)")
-                          )
+                    using (var reader = _connector.Read(new QueryMaker(Table, page, PageSize, Key.Split(",", StringSplitOptions.RemoveEmptyEntries))))
                     {
                         while (reader.Read())
                         {
