@@ -3,6 +3,48 @@ using System.Linq;
 
 namespace Koopa.Cli
 {
+
+    public class OptimizedQueryMaker : QueryMaker
+    {
+        
+        public OptimizedQueryMaker(string table, int page, int size, params string[] keys) 
+            : base(table, page, size, keys)
+        {
+        }
+
+        public override string Build()
+        {
+            var query =
+                $"; WITH pg AS " +
+                $"(" +
+                $"SELECT {string.Join(',', Keys)} " +
+                $"FROM {Table} " +
+                $"ORDER BY {string.Join(',', Keys)} " +
+                $"OFFSET {Size * (Page - 1)} ROWS " +
+                $"FETCH NEXT {Size} ROWS ONLY " +
+                $") " +
+                $"SELECT * " +
+                $"FROM {Table} AS t " +
+                $"WHERE EXISTS(SELECT 1 FROM pg WHERE {makeWhere(Keys)}) " +
+                $"ORDER BY t.TreatmentID OPTION(RECOMPILE);";
+
+            return query;
+        }
+
+        private string makeWhere(string[] keys)
+        {
+            var tkeys = keys.Select(k => $"pg.{k} = t.{k}").ToArray();
+
+            return string.Join(" AND ", tkeys);
+        }
+
+        public static implicit operator string(OptimizedQueryMaker obj)
+        {
+            return obj.Build();
+        }
+
+    }
+
     public class QueryMaker
     {
         public string Table { get; }
@@ -41,7 +83,7 @@ namespace Koopa.Cli
             Keys = keys;
         }
 
-        public string Build()
+        public virtual string Build()
         {
             var query = 
                 $"SELECT * FROM {Table} " +

@@ -10,7 +10,7 @@ namespace Koopa.Cli
     public class TableMigrator : IMigrator, IDisposable
     {
 
-        const int DEFAULT_PAGE_SIZE = 5000;
+        const int DEFAULT_PAGE_SIZE = 100;
 
         private readonly IConnector _connector;
 
@@ -79,7 +79,7 @@ namespace Koopa.Cli
                     var table = new Table(
                             new Schema(fields.ToArray()));
 
-                    using (var reader = _connector.Read(new QueryMaker(Table, page, PageSize, Key.Split(",", StringSplitOptions.RemoveEmptyEntries))))
+                    using (var reader = _connector.Read(new OptimizedQueryMaker(Table, page, PageSize, Key.Split(",", StringSplitOptions.RemoveEmptyEntries))))
                     {
                         while (reader.Read())
                         {
