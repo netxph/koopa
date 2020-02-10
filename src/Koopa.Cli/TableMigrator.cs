@@ -13,17 +13,26 @@ namespace Koopa.Cli
 {
     public class TableMigrator : IMigrator, IDisposable
     {
+
+        const int DEFAULT_PAGE_SIZE = 100;
+
         private readonly IConnector _connector;
 
         public string Table { get; }
         public int PageSize { get; }
+        public string Key { get; }
 
-        public TableMigrator(string table, IConnector connector)
-            : this(table, 5000, connector)
+        public TableMigrator(string table, string key, IConnector connector)
+            : this(table, key, DEFAULT_PAGE_SIZE, connector)
         {
         }
-        
-        public TableMigrator(string table, int pageSize, IConnector connector)
+
+        public TableMigrator(string table, IConnector connector)
+            : this(table, "?auto", DEFAULT_PAGE_SIZE, connector)
+        {
+        }
+
+        public TableMigrator(string table, string key, int pageSize, IConnector connector)
         {
             _connector = connector ?? throw new ArgumentNullException(nameof(connector));
 
@@ -34,7 +43,14 @@ namespace Koopa.Cli
 
             Table = table;
 
-            if(pageSize < 1)
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            Key = key;
+
+            if (pageSize < 1)
             {
                 throw new ArgumentOutOfRangeException(nameof(pageSize));
             }
@@ -57,31 +73,54 @@ namespace Koopa.Cli
                 fields.Add(new DataField<string>(col.Name));
             }
 
-            var table = new Table(
-                new Schema(fields.ToArray()));
+            int page = 1;
+            bool endPage = false;
 
-            using (var reader = _connector.Read($"SELECT * FROM {Table}"))
+            while (!endPage)
             {
-                while (reader.Read())
-                {
-                    var values = new List<object>();
+                var table = new Table(
+                    new Schema(fields.ToArray()));
 
-                    for (int i = 0; i < reader.FieldCount; i++)
+                using (var reader =
+                    _connector.Read(
+                        $"SELECT * FROM {Table} ORDER BY {Key} OFFSET {PageSize * (page -1)} ROWS FETCH NEXT {PageSize} ROWS ONLY OPTION (RECOMPILE)")
+                )
+                {
+                    while (reader.Read())
                     {
-                        values.Add(reader.GetValue(i).ToString());
+                        var values = new List<object>();
+
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            values.Add(reader.GetValue(i).ToString());
+                        }
+
+                        table.Add(new Row(values.ToArray()));
                     }
 
-                    table.Add(new Row(values.ToArray()));
+                }
+
+                if (table.Count > 0)
+                {
+                    using (var fileStream = File.OpenWrite(destination))
+                    {
+                        using (var writer = new ParquetWriter(table.Schema, fileStream, append: true))
+                        {
+                            writer.Write(table);
+                        }
+                    }
+                }
+
+                if (table.Count < PageSize)
+                {
+                    endPage = true;
+                }
+                else
+                {
+                    page++;
                 }
             }
 
-            using (var fileStream = File.OpenWrite(destination))
-            {
-                using (var writer = new ParquetWriter(table.Schema, fileStream))
-                {
-                    writer.Write(table);
-                }
-            }
         }
 
         public void Dispose()

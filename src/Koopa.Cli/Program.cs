@@ -34,12 +34,13 @@ namespace Koopa.Cli
                 var connection = exportCmd.Option("-c|--connection <connection_string>", "The connection string.",
                     CommandOptionType.SingleValue);
                 var table = exportCmd.Option("-t|--table <table_name>", "The table.", CommandOptionType.SingleValue);
+                var key = exportCmd.Option("-k|--key <key_column>", "The key column.", CommandOptionType.SingleValue);
                 var destination = exportCmd.Option("-d|--destination <destination>", "The target destination.", CommandOptionType.SingleValue);
 
                 exportCmd.OnExecute(() =>
                 {
                     var exportView = new ExportView(
-                        new TableMigrator(table.Value(),
+                        new TableMigrator(table.Value(), key.Value(),
                             new SqlConnector(connection.Value())));
 
                     exportView.Table = table.Value();
