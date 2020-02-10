@@ -41,10 +41,10 @@ namespace Koopa.Cli
             return schema;
         }
 
-        public IDataReader Read(string table)
+        public IDataReader Read(string query)
         {
             var command = _connection.CreateCommand();
-            command.CommandText = $"SELECT * FROM {table}";
+            command.CommandText = query;
             command.CommandType = CommandType.Text;
 
             return command.ExecuteReader();

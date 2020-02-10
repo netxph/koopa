@@ -16,8 +16,14 @@ namespace Koopa.Cli
         private readonly IConnector _connector;
 
         public string Table { get; }
-        
+        public int PageSize { get; }
+
         public TableMigrator(string table, IConnector connector)
+            : this(table, 5000, connector)
+        {
+        }
+        
+        public TableMigrator(string table, int pageSize, IConnector connector)
         {
             _connector = connector ?? throw new ArgumentNullException(nameof(connector));
 
@@ -27,6 +33,13 @@ namespace Koopa.Cli
             }
 
             Table = table;
+
+            if(pageSize < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(pageSize));
+            }
+
+            PageSize = pageSize;
         }
 
         public ColSchema GetSchema()
@@ -47,7 +60,7 @@ namespace Koopa.Cli
             var table = new Table(
                 new Schema(fields.ToArray()));
 
-            using (var reader = _connector.Read(Table))
+            using (var reader = _connector.Read($"SELECT * FROM {Table}"))
             {
                 while (reader.Read())
                 {
