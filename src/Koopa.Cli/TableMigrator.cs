@@ -14,7 +14,7 @@ namespace Koopa.Cli
     public class TableMigrator : IMigrator, IDisposable
     {
 
-        const int DEFAULT_PAGE_SIZE = 100;
+        const int DEFAULT_PAGE_SIZE = 5000;
 
         private readonly IConnector _connector;
 
@@ -76,49 +76,56 @@ namespace Koopa.Cli
             int page = 1;
             bool endPage = false;
 
-            while (!endPage)
+            using(var ms = new FileStream(destination, FileMode.Create))
             {
-                var table = new Table(
-                    new Schema(fields.ToArray()));
-
-                using (var reader =
-                    _connector.Read(
-                        $"SELECT * FROM {Table} ORDER BY {Key} OFFSET {PageSize * (page -1)} ROWS FETCH NEXT {PageSize} ROWS ONLY OPTION (RECOMPILE)")
-                )
+                while (!endPage)
                 {
-                    while (reader.Read())
-                    {
-                        var values = new List<object>();
+                    var table = new Table(
+                            new Schema(fields.ToArray()));
 
-                        for (int i = 0; i < reader.FieldCount; i++)
+                    using (var reader =
+                            _connector.Read(
+                                $"SELECT * FROM {Table} ORDER BY {Key} OFFSET {PageSize * (page -1)} ROWS FETCH NEXT {PageSize} ROWS ONLY OPTION (RECOMPILE)")
+                          )
+                    {
+                        while (reader.Read())
                         {
-                            values.Add(reader.GetValue(i).ToString());
+                            var values = new List<object>();
+
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                values.Add(reader.GetValue(i).ToString());
+                            }
+
+                            table.Add(new Row(values.ToArray()));
                         }
 
-                        table.Add(new Row(values.ToArray()));
                     }
 
-                }
-
-                if (table.Count > 0)
-                {
-                    using (var fileStream = File.OpenWrite(destination))
+                    if (table.Count > 0)
                     {
-                        using (var writer = new ParquetWriter(table.Schema, fileStream, append: true))
+                        bool append = page > 1;
+
+                        ms.Position = 0;
+
+                        using (var writer = new ParquetWriter(table.Schema, ms, append: append))
                         {
                             writer.Write(table);
                         }
                     }
+
+                    if (table.Count < PageSize)
+                    {
+                        endPage = true;
+                    }
+                    else
+                    {
+                        page++;
+                    }
+
+                    ms.Flush(true);
                 }
 
-                if (table.Count < PageSize)
-                {
-                    endPage = true;
-                }
-                else
-                {
-                    page++;
-                }
             }
 
         }

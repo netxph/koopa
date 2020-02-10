@@ -6,6 +6,6 @@ namespace Koopa.Cli
     public interface IConnector : IDisposable
     {
         ColSchema ReadSchema(string table);
-        IDataReader Read(string table);
+        IDataReader Read(string query);
     }
 }

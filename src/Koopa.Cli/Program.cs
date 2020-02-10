@@ -40,8 +40,10 @@ namespace Koopa.Cli
                 exportCmd.OnExecute(() =>
                 {
                     var exportView = new ExportView(
+                        new TraceMigrator(
                         new TableMigrator(table.Value(), key.Value(),
-                            new SqlConnector(connection.Value())));
+                            new TraceConnector(
+                            new SqlConnector(connection.Value())))));
 
                     exportView.Table = table.Value();
                     exportView.Destination = destination.Value();
