@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Parquet;
 using Parquet.Data;
 using Parquet.Data.Rows;
@@ -10,7 +11,7 @@ namespace Koopa.Cli
     public class TableMigrator : IMigrator, IDisposable
     {
 
-        const int DEFAULT_PAGE_SIZE = 100;
+        const int DEFAULT_PAGE_SIZE = 5000;
 
         private readonly IConnector _connector;
 
@@ -61,12 +62,12 @@ namespace Koopa.Cli
 
         public void Migrate(string destination)
         {
-            var schema = GetSchema();
+            var schema = GetSchema().ToList();
             var fields = new List<Field>();
 
             foreach (var col in schema)
             {
-                fields.Add(new TypeMapper(col));
+                fields.Add(new DataField(col.Name, col.GetConversionType()));
             }
 
             int page = 1;
@@ -79,7 +80,7 @@ namespace Koopa.Cli
                     var table = new Table(
                             new Schema(fields.ToArray()));
 
-                    using (var reader = _connector.Read(new OptimizedQueryMaker(Table, page, PageSize, Key.Split(",", StringSplitOptions.RemoveEmptyEntries))))
+                    using (var reader = _connector.Read(new QueryMaker(Table, page, PageSize, Key.Split(",", StringSplitOptions.RemoveEmptyEntries))))
                     {
                         while (reader.Read())
                         {
@@ -87,7 +88,7 @@ namespace Koopa.Cli
 
                             for (int i = 0; i < reader.FieldCount; i++)
                             {
-                                values.Add(reader.GetValue(i).ToString());
+                                values.Add(schema[i].Get(reader.GetValue(i)));
                             }
 
                             table.Add(new Row(values.ToArray()));

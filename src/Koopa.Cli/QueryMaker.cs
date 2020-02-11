@@ -26,9 +26,16 @@ namespace Koopa.Cli
                 $"SELECT * " +
                 $"FROM {Table} AS t " +
                 $"WHERE EXISTS(SELECT 1 FROM pg WHERE {makeWhere(Keys)}) " +
-                $"ORDER BY t.TreatmentID OPTION(RECOMPILE);";
+                $"ORDER BY {makeSort(Keys)} OPTION(RECOMPILE);";
 
             return query;
+        }
+
+        private string makeSort(string[] keys)
+        {
+            var tkeys = keys.Select(k => $"t.{k}").ToArray();
+
+            return string.Join(',', tkeys);
         }
 
         private string makeWhere(string[] keys)

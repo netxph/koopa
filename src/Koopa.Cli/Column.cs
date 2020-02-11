@@ -23,5 +23,15 @@ namespace Koopa.Cli
 
         public string Name { get; }
         public string ColType { get; }
+
+        public Type GetConversionType()
+        {
+            return new TypeMapper(ColType); 
+        }
+
+        public object Get(object value)
+        {
+            return Convert.ChangeType(value, GetConversionType());
+        }
     }
 }
