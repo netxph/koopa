@@ -36,12 +36,13 @@ namespace Koopa.Cli
                 var table = exportCmd.Option("-t|--table <table_name>", "The table.", CommandOptionType.SingleValue);
                 var key = exportCmd.Option("-k|--key <key_column>", "The key column.", CommandOptionType.SingleValue);
                 var destination = exportCmd.Option("-d|--destination <destination>", "The target destination.", CommandOptionType.SingleValue);
+                var size = exportCmd.Option("-s|--size <size>", "The page size.", CommandOptionType.SingleValue);
 
                 exportCmd.OnExecute(() =>
                 {
                     var exportView = new ExportView(
                         new TraceMigrator(
-                        new TableMigrator(table.Value(), key.Value(),
+                        new TableMigrator(table.Value(), key.Value(), size.HasValue() ? int.Parse(size.Value()) : 5000,
                             new TraceConnector(
                             new SqlConnector(connection.Value())))));
 
