@@ -34,12 +34,27 @@ namespace Koopa.Cli
                 default:
                     return typeof(string);
             }
-
         }
 
         public static implicit operator Type(TypeMapper obj)
         {
             return obj.Create();
+        }
+
+        public DataType GetDataType()
+        {
+            switch (_dbType)
+            {
+                case "bigint":
+                    return DataType.Int64;
+                case "smallint":
+                    return DataType.Int32;
+                case "money":
+                case "decimal":
+                    return DataType.Decimal;
+                default:
+                    return DataType.String;
+            }
         }
     }
 }

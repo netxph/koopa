@@ -67,7 +67,7 @@ namespace Koopa.Cli
 
             foreach (var col in schema)
             {
-                fields.Add(new DataField(col.Name, col.GetConversionType()));
+                fields.Add(new DataField(col.Name, col.GetParquetType(), true, false));
             }
 
             int page = 1;

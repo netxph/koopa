@@ -1,4 +1,5 @@
 ﻿using System;
+using Parquet.Data;
 
 namespace Koopa.Cli
 {
@@ -24,14 +25,24 @@ namespace Koopa.Cli
         public string Name { get; }
         public string ColType { get; }
 
-        public Type GetConversionType()
+        public Type GetClrType()
         {
             return new TypeMapper(ColType); 
         }
 
+        public DataType GetParquetType()
+        {
+            return new TypeMapper(ColType).GetDataType();
+        }
+
         public object Get(object value)
         {
-            return Convert.ChangeType(value, GetConversionType());
+            if (value != null && value != DBNull.Value)
+            {
+                return Convert.ChangeType(value, GetClrType());
+            }
+
+            return null;
         }
     }
 }
