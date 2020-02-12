@@ -80,7 +80,7 @@ namespace Koopa.Cli
                     var table = new Table(
                             new Schema(fields.ToArray()));
 
-                    using (var reader = _connector.Read(new QueryMaker(Table, page, PageSize, Key.Split(",", StringSplitOptions.RemoveEmptyEntries))))
+                    using (var reader = _connector.Read(new OptimizedQueryMaker(Table, page, PageSize, Key.Split(",", StringSplitOptions.RemoveEmptyEntries))))
                     {
                         while (reader.Read())
                         {

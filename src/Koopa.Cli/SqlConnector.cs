@@ -25,6 +25,7 @@ namespace Koopa.Cli
             var command = _connection.CreateCommand();
             command.CommandText = $"SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{sch}' AND TABLE_NAME = '{tb}'";
             command.CommandType = CommandType.Text;
+            command.CommandTimeout = 0;
 
             var schema = new ColSchema();
 

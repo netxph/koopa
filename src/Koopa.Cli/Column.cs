@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Text;
 using Parquet.Data;
+using Parquet.Thrift;
+using Type = System.Type;
 
 namespace Koopa.Cli
 {
@@ -39,6 +42,11 @@ namespace Koopa.Cli
         {
             if (value != null && value != DBNull.Value)
             {
+                if (value is byte[])
+                {
+                    return Convert.ToBase64String((byte[])value);
+                }
+
                 return Convert.ChangeType(value, GetClrType());
             }
 

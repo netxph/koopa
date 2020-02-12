@@ -14,19 +14,19 @@ namespace Koopa.Cli
 
         public override string Build()
         {
-            var query =
-                $"; WITH pg AS " +
-                $"(" +
-                $"SELECT {string.Join(',', Keys)} " +
+            var query = 
+                $";WITH pg AS " +
+                $"( " +
+                $"SELECT  {string.Join(", ", Keys)} " +
                 $"FROM {Table} " +
-                $"ORDER BY {string.Join(',', Keys)} " +
+                $"ORDER BY {string.Join(", ", Keys)} " +
                 $"OFFSET {Size * (Page - 1)} ROWS " +
                 $"FETCH NEXT {Size} ROWS ONLY " +
                 $") " +
-                $"SELECT * " +
+                $"SELECT t.* " +
                 $"FROM {Table} AS t " +
-                $"WHERE EXISTS(SELECT 1 FROM pg WHERE {makeWhere(Keys)}) " +
-                $"ORDER BY {makeSort(Keys)} OPTION(RECOMPILE);";
+                $"INNER JOIN pg ON {makeWhere(Keys)} " +
+                $"ORDER BY {string.Join(", ", Keys)}";
 
             return query;
         }

@@ -31,6 +31,8 @@ namespace Koopa.Cli
                 case "money":
                 case "decimal":
                     return typeof(decimal);
+                case "bit":
+                    return typeof(bool);
                 default:
                     return typeof(string);
             }
@@ -52,6 +54,8 @@ namespace Koopa.Cli
                 case "money":
                 case "decimal":
                     return DataType.Decimal;
+                case "bit":
+                    return DataType.Boolean;
                 default:
                     return DataType.String;
             }
