@@ -6,19 +6,43 @@ namespace Koopa.Cli
 
     public class OptimizedQueryMaker : QueryMaker
     {
-        
-        public OptimizedQueryMaker(string table, int page, int size, params string[] keys) 
+        public long MinOffset { get; }
+        public long MaxOffset { get; }
+        public string PartitionKey { get; }
+
+        public OptimizedQueryMaker(string table, int page, int size, string partitionKey, long minOffset, long maxOffset, params string[] keys)
             : base(table, page, size, keys)
         {
+            if (minOffset < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(minOffset));
+            }
+
+            MinOffset = minOffset;
+
+            if (maxOffset < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(minOffset));
+            }
+
+            MaxOffset = maxOffset;
+
+            if (string.IsNullOrEmpty(partitionKey))
+            {
+                throw new ArgumentNullException(nameof(partitionKey));
+            }
+
+            PartitionKey = partitionKey;
         }
 
         public override string Build()
         {
-            var query = 
+            var query =
                 $";WITH pg AS " +
                 $"( " +
                 $"SELECT  {string.Join(", ", Keys)} " +
                 $"FROM {Table} " +
+                $"WHERE {PartitionKey} > {MinOffset} AND {PartitionKey} <= {MaxOffset} " +
                 $"ORDER BY {string.Join(", ", Keys)} " +
                 $"OFFSET {Size * (Page - 1)} ROWS " +
                 $"FETCH NEXT {Size} ROWS ONLY " +
@@ -92,10 +116,10 @@ namespace Koopa.Cli
 
         public virtual string Build()
         {
-            var query = 
+            var query =
                 $"SELECT * FROM {Table} " +
-                $"ORDER BY {string.Join(',', Keys)} " + 
-                    $"OFFSET {Size * (Page - 1)} ROWS " + 
+                $"ORDER BY {string.Join(',', Keys)} " +
+                    $"OFFSET {Size * (Page - 1)} ROWS " +
                     $"FETCH NEXT {Size} ROWS ONLY OPTION (RECOMPILE)";
 
             return query;

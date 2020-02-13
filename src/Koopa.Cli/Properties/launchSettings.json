@@ -2,7 +2,7 @@
   "profiles": {
     "Koopa.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "export -c \"Data Source=nvlcmdq100;Initial Catalog=REZNVOL01;User ID=development;Password=DEVEL1!;\" -t \"Rez.Agent\" -k \"AgentID\" -d test.parquet -s 50000"
+      "commandLineArgs": "export -c \"data source=localhost;initial catalog=NcsAnalyticsDW114;integrated security=true;\" -t \"AnalyticsDW.Treatment\" -k TreatmentID -d test -p TreatmentID:5"
     }
   }
 }
