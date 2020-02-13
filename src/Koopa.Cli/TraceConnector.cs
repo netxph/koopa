@@ -33,6 +33,11 @@ namespace Koopa.Cli
             return reader;
         }
 
+        public T Execute<T>(string query)
+        {
+            return _connector.Execute<T>(query);
+        }
+
         public void Dispose()
         {
             _connector.Dispose();

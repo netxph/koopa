@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
+using Microsoft.VisualBasic;
 using Parquet;
 using Parquet.Data;
 using Parquet.Data.Rows;
@@ -80,20 +82,29 @@ namespace Koopa.Cli
                     var table = new Table(
                             new Schema(fields.ToArray()));
 
-                    using (var reader = _connector.Read(new OptimizedQueryMaker(Table, page, PageSize, Key.Split(",", StringSplitOptions.RemoveEmptyEntries))))
+                    try
                     {
-                        while (reader.Read())
+                        using (var reader = _connector.Read(new OptimizedQueryMaker(Table, page, PageSize,
+                            Key.Split(",", StringSplitOptions.RemoveEmptyEntries))))
                         {
-                            var values = new List<object>();
-
-                            for (int i = 0; i < reader.FieldCount; i++)
+                            while (reader.Read())
                             {
-                                values.Add(schema[i].Get(reader.GetValue(i)));
+                                var values = new List<object>();
+
+                                for (int i = 0; i < reader.FieldCount; i++)
+                                {
+                                    values.Add(schema[i].Get(reader.GetValue(i)));
+                                }
+
+                                table.Add(new Row(values.ToArray()));
                             }
 
-                            table.Add(new Row(values.ToArray()));
                         }
-
+                    }
+                    catch (SqlException sqex)
+                    {
+                        Console.WriteLine($"ERROR: {sqex.Message}");
+                        continue;
                     }
 
                     if (table.Count > 0)

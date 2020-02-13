@@ -29,7 +29,7 @@ namespace Koopa.Cli
 
             var schema = new ColSchema();
 
-            using (var reader = command.ExecuteReader())
+            using (var reader = command.ExecuteReader(CommandBehavior.SequentialAccess))
             {
                 while (reader.Read())
                 {
@@ -49,6 +49,15 @@ namespace Koopa.Cli
             command.CommandType = CommandType.Text;
 
             return command.ExecuteReader();
+        }
+
+        public T Execute<T>(string query)
+        {
+            var command = _connection.CreateCommand();
+            command.CommandText = query;
+            command.CommandType = CommandType.Text;
+
+            return (T)Convert.ChangeType(command.ExecuteScalar(), typeof(T));
         }
 
         public void Dispose()
